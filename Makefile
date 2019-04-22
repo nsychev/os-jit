@@ -1,5 +1,5 @@
-CXX := g++
-OPTIONS := -std=c++17 -Wall -pedantic
+CXX := g++ 
+OPTIONS := -g -std=c++17 -Wall -pedantic
 
 all: hij
 
