@@ -114,27 +114,25 @@ void print_error(const char* reason) {
 }
 
 std::pair<size_t, shellcode> gen_push_quine(const char* command, size_t size) {
-    ++size; // zero-byte
-    while (size % 4 != 0) ++size; // padding
-
-    size_t offset = 0x18 + size;
+    size_t mem_size = size + 4 - size % 4;
+    size_t offset = 0x18 + mem_size;
 
     byte payload[] = {
         0x48, 0x81, 0xec, 0x00, 0x00, 0x00, 0x00     // sub   rsp, 0x????????
     };
 
-    memcpy(payload + 3, &size, 4); // copy size to payload
+    memcpy(payload + 3, &mem_size, 4); // copy size to payload
 
     shellcode q(payload, 7);
 
-    for (size_t i = 0; i < size; i += 4) {
+    for (size_t i = 0; i < mem_size; i += 4) {
         byte payload[] = {
             0xc7, 0x84, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             // mov DWORD PTR [rsp+0x????????], 0x????????
         };
 
         memcpy(payload + 3, &i, 4); // copy offset
-        memcpy(payload + 7, command + i, 4); // copy command
+        memcpy(payload + 7, command + i, std::min((size_t)4, size - i)); // copy command
 
         q += shellcode(payload, 11);
     }
